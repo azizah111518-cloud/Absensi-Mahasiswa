@@ -1572,8 +1572,3 @@
 </html>
 ```
 eof
-
-### Deskripsi Perbaikan dan Fitur Terkini:
-1. **Penerapan URL Langsung Secara Mutlak**: URL `https://script.google.com/macros/s/AKfycbw2YPXfCtg2gSmF_6Iim28kUXZyqwIcHKT30xQBviLPhrJOPS31rm0d1c9ZlGdqRUO4/exec` telah disatukan secara internal sebagai konstanta JavaScript utama (`GOOGLE_SCRIPT_URL`), menggantikan semua database lokal (*LocalStorage fallback*).
-2. **Pembersihan Syntax Backtick**: Semua pembentukan baris tabel dinamis yang rentan memicu kesalahan kompilasi telah diperbaiki dengan penataan struktur String Literal yang rapi tanpa adanya karakter Markdown atau *nested quotes* yang bertabrakan.
-3. **Pembatasan Waktu Akurat**: Opsi presets (15, 30, 60 Menit) dan opsi kustom telah dioptimalkan agar menghitung waktu mundur presisi tinggi. Sesi otomatis mengunci absensi ketika waktu habis agar tidak ada mahasiswa yang terlambat menginput data.
