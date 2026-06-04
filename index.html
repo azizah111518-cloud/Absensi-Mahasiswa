@@ -13,8 +13,10 @@
     <meta name="theme-color" content="#121214">
 
     <!-- Favicon & Icons -->
-    <link rel="icon" type="image/x-icon" href="https://upload.wikimedia.org/wikipedia/id/thumb/e/e3/Logo_STKIP_Taman_Siswa_Bima.png/240px-Logo_STKIP_Taman_Siswa_Bima.png">
-    <link rel="apple-touch-icon" href="https://upload.wikimedia.org/wikipedia/id/thumb/e/e3/Logo_STKIP_Taman_Siswa_Bima.png/240px-Logo_STKIP_Taman_Siswa_Bima.png">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+    <link rel="apple-touch-icon" href="icon-512.png">
 
     <!-- Manifest File -->
     <link rel="manifest" href="manifest.json">
@@ -139,7 +141,7 @@
         <div class="luxury-card p-8 md:p-12 rounded-[2.5rem] w-full max-w-md text-center fade-in relative z-10 gold-border-gradient">
             <div class="mb-8">
                 <div class="w-24 h-24 bg-gradient-to-b from-[#1c1c21] to-[#0d0d0f] rounded-3xl mx-auto flex items-center justify-center shadow-2xl mb-4 border border-[#BF953F]/30 overflow-hidden p-2 relative group">
-                    <img src="https://upload.wikimedia.org/wikipedia/id/thumb/e/e3/Logo_STKIP_Taman_Siswa_Bima.png/240px-Logo_STKIP_Taman_Siswa_Bima.png" alt="Logo TAMSIS" class="w-full h-full object-contain filter drop-shadow-[0_2px_10px_rgba(191,149,63,0.3)]">
+                    <img src="logo.png" alt="Logo TAMSIS" class="w-full h-full object-contain filter drop-shadow-[0_2px_10px_rgba(191,149,63,0.3)]" onerror="this.src='icon-512.png'">
                 </div>
                 <h1 class="text-2xl font-extrabold font-luxury tracking-wider uppercase mt-4">
                     <span class="gold-text-gradient">STKIP TAMAN SISWA BIMA</span>
@@ -184,7 +186,7 @@
         <div class="lg:hidden flex items-center justify-between luxury-card rounded-2xl px-5 py-4 mb-4 border border-[#BF953F]/30 shadow-lg">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 bg-[#16161a] rounded-xl flex items-center justify-center border border-[#BF953F]/30">
-                    <img src="https://upload.wikimedia.org/wikipedia/id/thumb/e/e3/Logo_STKIP_Taman_Siswa_Bima.png/240px-Logo_STKIP_Taman_Siswa_Bima.png" alt="Logo" class="w-7 h-7 object-contain">
+                    <img src="logo.png" alt="Logo" class="w-7 h-7 object-contain" onerror="this.src='icon-192.png'">
                 </div>
                 <div>
                     <h2 class="text-sm font-black font-luxury tracking-widest leading-none gold-text-gradient">STKIP TAMAN SISWA BIMA</h2>
@@ -205,7 +207,7 @@
                 
                 <div class="mb-10 text-center relative z-10">
                     <div class="w-16 h-16 bg-gradient-to-b from-[#1c1c21] to-[#0d0d0f] rounded-2xl mx-auto flex items-center justify-center border border-[#BF953F]/30 p-1 mb-3">
-                        <img src="https://upload.wikimedia.org/wikipedia/id/thumb/e/e3/Logo_STKIP_Taman_Siswa_Bima.png/240px-Logo_STKIP_Taman_Siswa_Bima.png" alt="Logo" class="w-full h-full object-contain">
+                        <img src="logo.png" alt="Logo" class="w-full h-full object-contain" onerror="this.src='icon-192.png'">
                     </div>
                     <h2 class="text-lg font-black font-luxury tracking-widest leading-none gold-text-gradient uppercase">STKIP TAMAN SISWA BIMA</h2>
                     <span class="text-[9px] text-[#BF953F] font-bold uppercase tracking-[0.2em] mt-2 block">Panel Administrasi</span>
@@ -433,9 +435,9 @@
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwASTiI47TogYU3XdIFqjtq0MxZXle6ySkMarXBf6GUWKMewZPPGtkNIrDj51r_Xxum/exec";
 
         let session = {
-            user: localStorage.getItem('guru_user'),
-            role: localStorage.getItem('guru_role'),
-            pass: localStorage.getItem('guru_pass')
+            user: localStorage.getItem('MAHASISWA_user'),
+            role: localStorage.getItem('MAHASISWA_role'),
+            pass: localStorage.getItem('MAHASISWA_pass')
         };
         let monitorData = [];
 
@@ -459,11 +461,6 @@
         window.handleLogin = async () => {
             const user = document.getElementById('login-user').value.trim();
             const pass = document.getElementById('login-pass').value.trim();
-            
-            // CATATAN: Untuk menambahkan akun NUR AZIZA SANDI 123, 
-            // pastikan nama tersebut sudah ada di file Google Sheet 
-            // yang terhubung dengan SCRIPT_URL di atas.
-            
             if(!user || !pass) return showToast("Lengkapi form!", "border-rose-500/30 bg-rose-950/90 text-rose-400");
             
             const btn = document.getElementById('btn-login');
@@ -499,13 +496,13 @@
                 listenRealtime();
             } else {
                 document.getElementById('admin-sidebar').style.display = 'none';
-                switchMode('guru');
-                listenGuruHistory();
+                switchMode('MAHASISWA');
+                listenMAHASISWAHistory();
             }
         }
 
         window.switchMode = (mode) => {
-            ['monitor', 'manage', 'archive', 'guru'].forEach(s => {
+            ['monitor', 'manage', 'archive', 'MAHASISWA'].forEach(s => {
                 const el = document.getElementById(`section-${s}`);
                 if(el) el.classList.add('hidden');
             });
@@ -567,13 +564,13 @@
             if(document.getElementById('stat-total')) document.getElementById('stat-total').innerText = data.length;
         }
 
-        function listenGuruHistory() {
+        function listenMAHASISWAHistory() {
             onSnapshot(collection(db, ...publicCollectionPath), (snap) => {
                 const data = snap.docs.map(d => d.data())
                     .filter(d => d.nama === session.user)
                     .sort((a,b) => b.ts_raw - a.ts_raw);
                 
-                const container = document.getElementById('guru-history');
+                const container = document.getElementById('MAHASISWA-history');
                 if(!container) return;
                 
                 if(data.length === 0) {
@@ -653,7 +650,7 @@
             const pass = document.getElementById('reg-pass').value.trim();
             if(!user || !pass) return showToast("Isi data!", "border-rose-500/30 bg-rose-950/90 text-rose-400");
             try {
-                const res = await fetch(`${SCRIPT_URL}?action=createUser&user=${encodeURIComponent(user)}&pass=${encodeURIComponent(pass)}&role=Guru&adminUser=${session.user}&adminPass=${session.pass}`);
+                const res = await fetch(`${SCRIPT_URL}?action=createUser&user=${encodeURIComponent(user)}&pass=${encodeURIComponent(pass)}&role=MAHASISWA&adminUser=${session.user}&adminPass=${session.pass}`);
                 const data = await res.json();
                 showToast(data.status === "success" ? "Berhasil!" : data.message, data.status === "success" ? "border-emerald-500/30 bg-emerald-950/90 text-emerald-400" : "border-rose-500/30 bg-rose-950/90 text-rose-400");
             } catch (e) { showToast("Gagal!", "border-rose-500/30 bg-rose-950/90 text-rose-400"); }
