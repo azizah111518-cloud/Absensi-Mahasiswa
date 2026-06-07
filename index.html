@@ -260,6 +260,26 @@
                 </header>
 
                 <div id="section-monitor" class="hidden space-y-5 fade-in">
+                    <!-- Sesi Absensi Control Widget (Only Admin) -->
+                    <div class="luxury-card p-6 rounded-3xl border border-[#BF953F]/20 flex flex-col sm:flex-row items-center justify-between gap-4 gold-glow">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 bg-gradient-to-b from-[#1c1c21] to-[#0d0d0f] rounded-2xl flex items-center justify-center border border-[#BF953F]/30 shrink-0 text-[#BF953F] text-xl">
+                                <i class="fa-solid fa-clock"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-black text-white font-luxury uppercase tracking-wider text-xs leading-none">Status Sesi Absensi</h4>
+                                <span class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mt-2">Buka sesi agar mahasiswa dapat absen</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end border-t sm:border-0 border-white/5 pt-4 sm:pt-0">
+                            <span id="session-status-badge" class="px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest border border-rose-500/30 bg-rose-500/10 text-rose-400">Tertutup</span>
+                            <button id="btn-toggle-session" onclick="toggleAttendanceSession()" class="gold-bg-gradient text-black font-black px-5 py-3 rounded-xl shadow-lg active-scale hover:brightness-110 transition-all uppercase tracking-widest text-[10px] flex items-center gap-2">
+                                <i class="fa-solid fa-lock-open"></i>
+                                <span>Buka Sesi</span>
+                            </button>
+                        </div>
+                    </div>
+
                     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
                         <div class="luxury-card p-5 rounded-2xl border-l-4 border-l-emerald-500 border-y-transparent border-r-transparent">
                             <p class="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-1">Hadir</p>
@@ -289,7 +309,7 @@
                                 <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
                                     <i class="fa-solid fa-magnifying-glass text-xs"></i>
                                 </span>
-                                <input type="text" id="search-monitor" oninput="filterMonitor()" placeholder="Cari nama guru..." class="text-xs pl-8 pr-4 py-2 w-full sm:w-56 luxury-input rounded-xl">
+                                <input type="text" id="search-monitor" oninput="filterMonitor()" placeholder="Cari nama..." class="text-xs pl-8 pr-4 py-2 w-full sm:w-56 luxury-input rounded-xl">
                             </div>
                         </div>
                         <div class="overflow-x-auto max-h-[400px] overflow-y-auto">
@@ -297,7 +317,7 @@
                                 <thead class="bg-[#16161a] sticky top-0 text-[9px] font-black text-gray-400 uppercase tracking-widest border-b border-white/5 z-10">
                                     <tr>
                                         <th class="px-6 py-4">Waktu</th>
-                                        <th class="px-6 py-4">Nama Guru</th>
+                                        <th class="px-6 py-4">Nama</th>
                                         <th class="px-6 py-4 text-center">Status</th>
                                         <th class="px-6 py-4">Keterangan</th>
                                         <th class="px-6 py-4">Aksi</th>
@@ -317,7 +337,19 @@
                                 <i class="fa-solid fa-fingerprint text-[#BF953F]"></i>
                                 <span class="gold-text-gradient">Formulir Presensi</span>
                             </h3>
-                            <form id="absensi-form" class="space-y-6">
+
+                            <!-- Session Closed Alert Notification -->
+                            <div id="session-closed-container" class="flex flex-col items-center justify-center py-12 text-center space-y-4">
+                                <div class="w-16 h-16 bg-rose-950/20 border border-rose-500/30 rounded-2xl flex items-center justify-center text-rose-500 text-2xl animate-pulse">
+                                    <i class="fa-solid fa-lock"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-black text-white uppercase tracking-wider text-xs">Sesi Absensi Ditutup</h4>
+                                    <p class="text-[11px] text-gray-400 mt-2 max-w-xs leading-relaxed mx-auto">Dosen / Admin belum membuka sesi absensi untuk saat ini. Silakan hubungi dosen pengampu atau tunggu hingga sesi dibuka.</p>
+                                </div>
+                            </div>
+
+                            <form id="absensi-form" class="space-y-6 hidden">
                                 <div>
                                     <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 block">Status Kehadiran</label>
                                     <div class="grid grid-cols-3 gap-3">
@@ -406,8 +438,8 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp, deleteDoc, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDzq3aqYZKNOv9JYDDt82xaOKARm-_uCEI",
@@ -423,6 +455,8 @@
         const db = getFirestore(app);
         const appId = 'presensi-guru-v2';
         const publicCollectionPath = ['artifacts', appId, 'public', 'data', 'absensi'];
+        // Config path for dynamic real-time Attendance Session status
+        const sessionConfigPath = ['artifacts', appId, 'public', 'data', 'config', 'session_status'];
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwASTiI47TogYU3XdIFqjtq0MxZXle6ySkMarXBf6GUWKMewZPPGtkNIrDj51r_Xxum/exec";
 
         let session = {
@@ -431,16 +465,55 @@
             pass: localStorage.getItem('guru_pass')
         };
         let monitorData = [];
+        let isSessionOpen = false;
+
+        // Dynamic snapshot unsubscribers to clean up stale listeners
+        let unsubSession = null;
+        let unsubRealtime = null;
+        let unsubHistory = null;
 
         onAuthStateChanged(auth, (user) => {
-            if (session.user && user) showApp();
+            // Clean up existing active listeners on auth changes
+            cleanupListeners();
+
+            if (user) {
+                // Instantly sync active session and collections once authorized
+                listenSessionStatus();
+                if (session.user) {
+                    showApp();
+                }
+            } else {
+                // If user is null, make sure we fallback automatically
+                initAuth();
+            }
         });
 
         const initAuth = async () => {
-            try { await signInAnonymously(auth); } catch (e) { console.error(e); }
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    try {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } catch (tokenErr) {
+                        // Soft fallback silently to avoid mismatch block error logs
+                        console.warn("Custom token failed, trying anonymous login fallback...");
+                        await signInAnonymously(auth);
+                    }
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (e) {
+                console.error("Auth process error:", e);
+            }
         };
         initAuth();
 
+        function cleanupListeners() {
+            if (unsubSession) { unsubSession(); unsubSession = null; }
+            if (unsubRealtime) { unsubRealtime(); unsubRealtime = null; }
+            if (unsubHistory) { unsubHistory(); unsubHistory = null; }
+        }
+
+        // Realtime Clock Loop
         setInterval(() => {
             const now = new Date();
             const clock = document.getElementById('live-clock');
@@ -466,6 +539,8 @@
                     localStorage.setItem('guru_user', data.username);
                     localStorage.setItem('guru_role', data.role);
                     localStorage.setItem('guru_pass', pass);
+                    
+                    // Trigger app view update manually after assigning session
                     showApp();
                 } else {
                     showToast("Login Gagal!", "border-rose-500/30 bg-rose-950/90 text-rose-400");
@@ -478,9 +553,12 @@
             document.getElementById('auth-section').classList.add('hidden');
             document.getElementById('app-section').classList.remove('hidden');
             document.getElementById('display-user').innerText = session.user;
-            document.getElementById('role-badge').innerText = session.role === 'Admin' ? 'Administrator' : 'Guru Aktif';
+            document.getElementById('role-badge').innerText = session.role === 'Admin' ? 'Administrator' : 'MAHASISWA Aktif';
             document.getElementById('user-avatar').innerText = (session.user[0] || '?').toUpperCase();
             
+            // Re-sync dynamic session state explicitly on view trigger
+            listenSessionStatus();
+
             if (session.role === "Admin") {
                 document.getElementById('admin-sidebar').style.display = 'flex';
                 switchMode('monitor');
@@ -491,6 +569,77 @@
                 listenGuruHistory();
             }
         }
+
+        // Real-time listener for the dynamic session status document with safe auth checking
+        function listenSessionStatus() {
+            if (!auth.currentUser) return;
+            if (unsubSession) unsubSession(); // clean existing instance
+            
+            unsubSession = onSnapshot(doc(db, ...sessionConfigPath), (docSnap) => {
+                const data = docSnap.exists() ? docSnap.data() : { isOpen: false };
+                isSessionOpen = data.isOpen;
+                updateSessionUI();
+            }, (err) => {
+                console.warn("Session status fetch handled safely:", err.message);
+            });
+        }
+
+        // Dynamic rendering of components depending on session state
+        function updateSessionUI() {
+            // Updating admin control widget
+            const badge = document.getElementById('session-status-badge');
+            const btn = document.getElementById('btn-toggle-session');
+            if (badge && btn) {
+                if (isSessionOpen) {
+                    badge.innerText = "Terbuka";
+                    badge.className = "px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 pulse-gold";
+                    btn.innerHTML = `<i class="fa-solid fa-lock"></i> <span>Tutup Sesi</span>`;
+                } else {
+                    badge.innerText = "Tertutup";
+                    badge.className = "px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest border border-rose-500/30 bg-rose-500/10 text-rose-400";
+                    btn.innerHTML = `<i class="fa-solid fa-lock-open"></i> <span>Buka Sesi</span>`;
+                }
+            }
+
+            // Updating student attendance panel visibility
+            const closedContainer = document.getElementById('session-closed-container');
+            const form = document.getElementById('absensi-form');
+            if (closedContainer && form) {
+                if (isSessionOpen) {
+                    closedContainer.classList.add('hidden');
+                    form.classList.remove('hidden');
+                } else {
+                    closedContainer.classList.remove('hidden');
+                    form.classList.add('hidden');
+                }
+            }
+        }
+
+        // Action trigger for opening/closing the session (Admin/Dosen)
+        window.toggleAttendanceSession = async () => {
+            if (!auth.currentUser) return;
+            const btn = document.getElementById('btn-toggle-session');
+            if (!btn) return;
+            btn.disabled = true;
+
+            try {
+                const nextState = !isSessionOpen;
+                await setDoc(doc(db, ...sessionConfigPath), {
+                    isOpen: nextState,
+                    updatedAt: serverTimestamp(),
+                    updatedBy: session.user || 'Admin'
+                });
+                showToast(
+                    nextState ? "Sesi Absensi Berhasil Dibuka!" : "Sesi Absensi Berhasil Ditutup!",
+                    nextState ? "border-emerald-500/30 bg-emerald-950/90 text-emerald-400" : "border-rose-500/30 bg-rose-950/90 text-rose-400"
+                );
+            } catch (err) {
+                console.error("Failed toggle session state:", err);
+                showToast("Gagal memperbarui sesi!", "border-rose-500/30 bg-rose-950/90 text-rose-400");
+            } finally {
+                btn.disabled = false;
+            }
+        };
 
         window.switchMode = (mode) => {
             ['monitor', 'manage', 'archive', 'guru'].forEach(s => {
@@ -516,9 +665,14 @@
         };
 
         function listenRealtime() {
-            onSnapshot(collection(db, ...publicCollectionPath), (snap) => {
+            if (!auth.currentUser) return;
+            if (unsubRealtime) unsubRealtime();
+
+            unsubRealtime = onSnapshot(collection(db, ...publicCollectionPath), (snap) => {
                 monitorData = snap.docs.map(d => ({id: d.id, ...d.data()})).sort((a,b) => b.ts_raw - a.ts_raw);
                 renderMonitorTable(monitorData);
+            }, (err) => {
+                console.warn("Realtime fetch safely handled:", err.message);
             });
         }
 
@@ -556,7 +710,10 @@
         }
 
         function listenGuruHistory() {
-            onSnapshot(collection(db, ...publicCollectionPath), (snap) => {
+            if (!auth.currentUser) return;
+            if (unsubHistory) unsubHistory();
+
+            unsubHistory = onSnapshot(collection(db, ...publicCollectionPath), (snap) => {
                 const data = snap.docs.map(d => d.data())
                     .filter(d => d.nama === session.user)
                     .sort((a,b) => b.ts_raw - a.ts_raw);
@@ -579,10 +736,13 @@
                         <span class="w-2.5 h-2.5 rounded-full ${item.status === 'Hadir' ? 'bg-emerald-500' : item.status === 'Izin' ? 'bg-amber-500' : 'bg-rose-500'}"></span>
                     </div>
                 `).join('');
+            }, (err) => {
+                console.warn("History listen safely handled:", err.message);
             });
         }
 
         window.deleteRecord = async (id) => {
+            if (!auth.currentUser) return;
             try {
                 await deleteDoc(doc(db, ...publicCollectionPath, id));
                 showToast("Data Berhasil Dihapus", "border-rose-500/30 bg-rose-950/90 text-rose-400");
@@ -593,6 +753,7 @@
 
         document.getElementById('absensi-form').onsubmit = async (e) => {
             e.preventDefault();
+            if (!auth.currentUser) return;
             const btn = document.getElementById('btn-absen');
             const formData = new FormData(e.target);
             const status = formData.get('status');
@@ -659,6 +820,7 @@
         }
 
         window.handleLogout = async () => {
+            cleanupListeners();
             localStorage.clear();
             session = { user: null, role: null, pass: null };
             document.getElementById('app-section').classList.add('hidden');
@@ -668,14 +830,26 @@
             
             try {
                 await auth.signOut();
-                await signInAnonymously(auth);
-            } catch (e) { console.error(e); }
+                // Safe handling of default re-authentication on logout without triggers mismatch crash
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    try {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } catch (err) {
+                        await signInAnonymously(auth);
+                    }
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (e) { 
+                console.error("Logout authentication fallback error:", e); 
+            }
             
             showToast("Berhasil Keluar", "border-[#BF953F]/30 bg-[#16161a] text-[#BF953F]");
         };
         
         function showToast(msg, customClass) {
             const t = document.getElementById('toast');
+            if (!t) return;
             t.innerText = msg;
             t.className = `fixed bottom-10 left-1/2 -translate-x-1/2 px-6 py-4 rounded-2xl text-white font-extrabold text-xs tracking-widest uppercase z-[600] shadow-2xl transition-all duration-300 transform scale-100 ${customClass}`;
             t.classList.remove('hidden');
